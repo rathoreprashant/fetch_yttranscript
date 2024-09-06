@@ -1,19 +1,18 @@
+from flask import Flask, request, jsonify
 from youtube_transcript_api import YouTubeTranscriptApi
 
-def fetch_transcript(video_id, languages=['en', 'de']):
+app = Flask(__name__)
+
+@app.route('/transcript', methods=['GET'])
+def get_transcript():
+    video_id = request.args.get('video_id')
+    languages = request.args.get('languages', 'en').split(',')
+
     try:
         transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=languages)
-        return transcript
+        return jsonify(transcript)
     except Exception as e:
-        print(f"Error fetching transcript: {e}")
-        return None
-
-def main():
-    video_id = 'n7Spn1KUC38'  # Example video ID
-    transcript = fetch_transcript(video_id)
-    if transcript:
-        for entry in transcript:
-            print(f"{entry['start']:.2f} - {entry['start'] + entry['duration']:.2f}: {entry['text']}")
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
-    main()
+    app.run(host='0.0.0.0', port=8000)
